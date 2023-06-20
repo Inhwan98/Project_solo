@@ -15,8 +15,8 @@ TagManager:
   - Enemy
   - PlayerWeapon
   - Ground
-  - 
-  - 
+  - Item
+  - Obstacle
   - 
   - 
   - 

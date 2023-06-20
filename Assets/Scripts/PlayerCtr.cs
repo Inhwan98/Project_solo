@@ -2,14 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Inan.Obstalce;
 
 public class PlayerCtr : MonoBehaviour
 {
     //Animator cashing
     private readonly int hashRun = Animator.StringToHash("IsRun");
-
+    private readonly int hashPick = Animator.StringToHash("IsPick");
+    private readonly int hashAxe = Animator.StringToHash("IsAxe");
     //
-
+    [Header("Player State")]
+    [SerializeField] private PlayerState playerState = PlayerState.NONE;
+    [SerializeField] private GameObject[] playerWeapons;
+    private int currentWeaponIdx;
 
     [Header("Player MoveSetting")]
     public float _moveSpeed = 5f;                //   이동 속도
@@ -42,17 +47,9 @@ public class PlayerCtr : MonoBehaviour
 
     private float time = 0;
 
-    
-
-
-
-
     ////
 
     public static PlayerCtr instance = null;
-
-
-
 
     private void Awake()
     {
@@ -108,6 +105,76 @@ public class PlayerCtr : MonoBehaviour
         }
     }
 
+    IEnumerator CheckState()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(0.3f);
+
+            switch(playerState)
+            {
+                case PlayerState.PICK:
+                    break;
+
+                case PlayerState.AXE:
+                    break;
+            }
+        }
+    }
+
+    private void OnTriggerEnter(Collider coll)
+    {
+        if(coll.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
+        {
+            Debug.Log("Contact Obstacle Layer");
+            ObstacleCtr ObsCtr = coll.gameObject.GetComponent<ObstacleCtr>();
+            if(ObsCtr.GetObstacleState() == ObstacleState.STONE)
+            {
+                playerState = PlayerState.PICK;
+                anim.SetBool(hashPick, true);
+            }
+            else if(ObsCtr.GetObstacleState() == ObstacleState.TREE)
+            {
+                playerState = PlayerState.AXE;
+                anim.SetBool(hashAxe, true);
+            }
+            currentWeaponIdx = (int)playerState;
+            Debug.Log(currentWeaponIdx);
+
+            StartCoroutine(WaitWorkTime());
+
+        }
+    }
+
+    IEnumerator WaitWorkTime()
+    {
+        Collider weaponColl = playerWeapons[currentWeaponIdx].GetComponent<Collider>();
+        playerWeapons[currentWeaponIdx].SetActive(true);
+        weaponColl.enabled = false;
+        yield return new WaitForSeconds(0.7f);
+        weaponColl.enabled = true;
+        
+    }
+
+
+
+    private void OnTriggerExit(Collider coll)
+    {
+        if(coll.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
+        {
+            StopPickAction();
+        }
+    }
+
+    public void StopPickAction()
+    {
+        anim.SetBool(hashAxe, false);
+        anim.SetBool(hashPick, false);
+        playerState = PlayerState.NONE;
+        playerWeapons[currentWeaponIdx].SetActive(false);
+        currentWeaponIdx = 0;
+    }
+
  
 
     IEnumerator Targetting()
@@ -123,7 +190,7 @@ public class PlayerCtr : MonoBehaviour
 
             if (attackHits.Length > 0)
             {
-                Debug.Log("Enemy 감지했습니다");
+                //Debug.Log("Enemy 감지했습니다");
                 Vector3 enemyPos = attackHits[0].transform.position;
                 attackRotation = Quaternion.LookRotation(enemyPos - transform.position);
                 //anim.SetBool(hassAttack, true);
@@ -217,7 +284,7 @@ public class PlayerCtr : MonoBehaviour
     {
         arrowTemp.transform.SetParent(null);
         Rigidbody arrowRigid = arrowTemp.GetComponent<Rigidbody>();
-        Vector3 dir = attackRotation * Vector3.forward;
+        Vector3 dir = attackRotation * transform.forward;
         arrowTemp.transform.rotation = Quaternion.LookRotation(dir);
         arrowRigid.AddForce(arrowTemp.transform.forward * 500f);
         Destroy(arrowTemp, 5.0f);
