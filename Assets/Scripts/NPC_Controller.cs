@@ -17,7 +17,9 @@ namespace Inan.NPC
 
         private Animator anim;
         private Transform destTr; // agent의 목적지. 처음 목적지는 카트
-        [SerializeField] private Transform cartTr;
+        private Transform cartTr;
+        private Transform boxTr;
+        [SerializeField] private GameObject boxPrefab;
 
         private float time; //layer 바꿔주는 time
         private bool isCatchCart = false;
@@ -80,10 +82,14 @@ namespace Inan.NPC
                             transform.LookAt(destTr.position + (Vector3.right));
 
                             agent.isStopped = true;
+                            isCatchCart = true;
                             yield return new WaitForSeconds(0.3f);
                             destTr.parent = transform;
                             cartTr = destTr;
-                            isCatchCart = true;
+                            cartTr.gameObject.layer = 2; //Change Layer to Ignore
+                            
+                            //Rigidbody cartRigid = cartTr.gameObject.GetComponent<Rigidbody>();
+                            //cartRigid.isKinematic = true; // 마법사 NPC에 유용할듯
 
                             //catch후 첫 입장
                             destTr = gmr.GetRandTr();
@@ -98,17 +104,60 @@ namespace Inan.NPC
                         if(agent.remainingDistance <= 0.1f)
                         {
                             agent.isStopped = true;
+                            yield return new WaitForSeconds(0.3f);
+                            gmr.SetRandTr(destTr);
+                            destTr = gmr.GetPayTr();
                             
-                            cartTr.SetParent(null);
+                            agent.isStopped = false;
+                            agent.SetDestination(destTr.position);
+                            npcState = NPCState.PAY;
+                            //cartTr.SetParent(null);
 
-                            Debug.Log("자식 분리");
-                            anim.SetBool(hashThink, true);
-                            isCatchCart = false;
-
-                            
+                            //Debug.Log("자식 분리");
+                            //anim.SetBool(hashThink, true);
+                            //isCatchCart = false;
                         }
                         break;
-                }
+                    case NPCState.PAY:
+                        if (agent.remainingDistance <= 0.1f)
+                        {
+                            GameObject boxObj = Instantiate(boxPrefab, cartTr.position + (Vector3.up * 2.2f), Quaternion.identity);
+                            boxObj.transform.parent = cartTr;
+                            boxTr = boxObj.transform;
+                            destTr = gmr.GetExitTr();
+                            agent.SetDestination(destTr.position);
+                            npcState = NPCState.EXIT;
+                        }
+                        break;
+
+                    case NPCState.EXIT:
+                        if (agent.remainingDistance <= 0.1f)
+                        {
+                            boxTr.SetParent(this.transform);
+                            boxTr.localPosition = (transform.forward * 1.0f) + (transform.up * 4f);
+                            cartTr.SetParent(null);
+                            cartTr.gameObject.layer = LayerMask.NameToLayer("Cart");
+
+                            //Rigidbody cartRigid = cartTr.gameObject.GetComponent<Rigidbody>();
+                            //cartRigid.isKinematic = false;
+
+
+                            destTr = gmr.GetFinalTr();
+                            agent.SetDestination(destTr.position);
+
+                            npcState = NPCState.FINAL;
+                        }
+                        break;
+
+                    case NPCState.FINAL:
+                        if (agent.remainingDistance <= 0.1f)
+                        {
+                            Destroy(this.gameObject);
+                        }
+                        break;
+
+
+                        }
             }
         }
 

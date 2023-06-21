@@ -73,7 +73,6 @@ public class AutoDoor : MonoBehaviour
     {
         if(coll.gameObject.CompareTag("CHARACTER"))
         {
-            Debug.Log("문 열림");
             isOpen = false;
         }
     }

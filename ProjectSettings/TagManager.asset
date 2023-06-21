@@ -6,6 +6,7 @@ TagManager:
   tags:
   - FxTemporaire
   - CHARACTER
+  - CartParking
   layers:
   - Default
   - TransparentFX

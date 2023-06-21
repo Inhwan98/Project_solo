@@ -6,12 +6,17 @@ public class GameManager : MonoBehaviour
 {
     static public GameManager instance = null;
     
+    [Header("NPC Destination")]
     [SerializeField] private Transform cartGroupTr;
     [SerializeField] private Transform startTr;
     [SerializeField] private GameObject npcPrefab;
 
     [SerializeField] private Transform martInTr;
     [SerializeField] private Transform[] randTr;
+
+    [SerializeField] private Transform[] payTr;
+    [SerializeField] private Transform exitTrGroup;
+    [SerializeField] private Transform finalTr;
 
     private bool[] isCartUse; // 사용중인 카트가 있다면 true 없다면 false
     private bool isCart = false; // 사용할 카트가 있는가?
@@ -72,18 +77,16 @@ public class GameManager : MonoBehaviour
         while(true)
         {
             
-            if(isCart)
+            if(cartGroupTr.childCount != 0)
             {
+                curCartCount = cartGroupTr.childCount;
                 GameObject npcObj = Instantiate(npcPrefab, startTr.position, startTr.rotation);
                 NPC_Controller npcCtr = npcObj.GetComponent<NPC_Controller>();
-                for(int i = curCartCount - 1; i >= 0; i--)
+                for(int i = 0; i < curCartCount; i++)
                 {
-                    if(isCartUse[i] == true) continue; // 해당 카트가 사용중이면 할당권 
-
                     Transform cartTr = cartGroupTr.GetChild(i);
                     if(cartTr != null)
                     {
-                        Debug.Log("이동");
                         npcCtr.SetCartDestination(cartTr);
                         isCartUse[i] = true; // 해당 카트 사용중
                         break;
@@ -123,6 +126,47 @@ public class GameManager : MonoBehaviour
         }
 
         return randTr[randIdx].GetChild(childIdx);
+    }
+
+    public void SetRandTr(Transform _tr)
+    {
+        for(int i = 0; i < randTr.Length; i++)
+        {
+            for(int j = 0; j < randTr[randTr.Length].childCount; j++)
+            {
+                if(randTr[i].GetChild(j) == _tr)
+                {
+                    isUsedPos[i, j] = false;
+                }
+            }
+        }
+    }
+
+
+    public Transform GetPayTr()
+    {
+        return payTr[Random.Range(0,2)];
+    }
+
+    public Transform GetExitTr()
+    {
+        int childCount = exitTrGroup.childCount - 1;
+        int randIdx = Random.Range(0, childCount);
+
+        return exitTrGroup.GetChild(randIdx);
+    }
+
+    public Transform GetFinalTr()
+    {
+        return finalTr;
+    }
+
+    public void SetCartGroup(List<Transform> _cartTrs)
+    {
+        foreach(Transform cartTr in _cartTrs)
+        {
+            cartTr.parent = cartGroupTr;
+        }
     }
 
 

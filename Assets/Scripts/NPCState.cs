@@ -4,5 +4,8 @@ namespace Inan.NPC
     {
         CATCHCART,
         MARTIN,
+        PAY,
+        EXIT,
+        FINAL,
     }
 }

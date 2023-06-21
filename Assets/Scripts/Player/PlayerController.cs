@@ -2,7 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.AI;
 using Inan.Obstalce;
+
 
 public class PlayerController : MonoBehaviour
 {
@@ -23,15 +25,22 @@ public class PlayerController : MonoBehaviour
     [Header("JoyStick Controller")]
     [SerializeField] private DynamicJoystick joy;
 
-    private bool isAttack;
-    Quaternion attackRotation;
-    //// Attack End
-
-    private float time = 0;
-
     ////
 
     public static PlayerController instance = null;
+
+    // 카트 이동 구현
+    List<Transform> cartTr = new List<Transform>();
+    List<float> carDistanceList = new List<float>();
+    float timeSum;
+    [SerializeField]  float[] time = new float[28];
+
+    [SerializeField] float[] destTime = new float[28];
+    
+    private float cartOffset = 3.5f;
+
+    GameManager gmr;
+    
 
     private void Awake()
     {
@@ -46,23 +55,68 @@ public class PlayerController : MonoBehaviour
         rigid = GetComponent<Rigidbody>();
     }
 
+    private void Start()
+    {
+        gmr = GameManager.instance;
+    }
+
     // Update is called once per frame
-     private void FixedUpdate()
+    private void FixedUpdate()
+    {
+       
+    }
+    void Update()
     {
         PlayerInput();
         PlayerMove();
         PlayerTurn();
+        if (cartTr.Count == 0) return;
+
+        timeSum += Time.deltaTime;
+        int cartCount = cartTr.Count;
+
+
+        float offsetTime = 0.1f;
+
+        
+        for (int i = 0; i < cartCount; i++)
+        {
+            if (i < 5)
+            {
+                destTime[i] = offsetTime;
+            }
+            else if(i >= 5)
+            {
+                offsetTime += 0.1f;
+                destTime[i] = offsetTime;
+            }
+            
+        }
+
+        for (int i = 0; i < cartTr.Count; i++)
+        {
+           
+            if (timeSum < destTime[i])
+            {
+                time[i] = timeSum / destTime[i];
+
+                if (cartTr[i].parent == this.transform) cartTr[i].SetParent(null);
+                float distance = carDistanceList[i];
+
+                cartTr[i].transform.position = Vector3.Slerp(cartTr[i].transform.position, this.transform.position + (transform.forward * distance), time[i]);
+                Quaternion targetRot = Quaternion.Euler(0, 270f, 0);
+
+                cartTr[i].localRotation = Quaternion.Slerp(cartTr[i].localRotation, targetRot * transform.rotation, time[i]);
+            }
+            else
+            {
+                time[i] = 0;
+                timeSum = 0;
+            }
+        }
+
+        
     }
-    void Update()
-    {
-        
-        
-        
-    }
-
-   
-
-
 
     // Input
     private void PlayerInput()
@@ -75,8 +129,9 @@ public class PlayerController : MonoBehaviour
     // 플레이어 이동
     private void PlayerMove()
     {
-        _moveVector = new Vector3(_horizontalAxis, 0, _verticalAxis).normalized * _moveSpeed * Time.fixedDeltaTime;
-        rigid.MovePosition(rigid.position + _moveVector);
+        _moveVector = new Vector3(_horizontalAxis, 0, _verticalAxis).normalized * _moveSpeed * Time.deltaTime;
+        transform.position += _moveVector;
+        //rigid.MovePosition(rigid.position + _moveVector);
         anim.SetFloat(hashRun, _isRun ? 1f : 0f);
     }
 
@@ -86,9 +141,50 @@ public class PlayerController : MonoBehaviour
         if (_moveVector != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(_moveVector);
-            Quaternion moveQuat = Quaternion.Slerp(rigid.rotation, targetRotation, 0.3f);
-            rigid.MoveRotation(moveQuat);
+            Quaternion moveQuat = Quaternion.Slerp(transform.rotation, targetRotation, 0.3f);
+            transform.rotation = moveQuat;
+            //rigid.MoveRotation(moveQuat);
         }
     }
+
+    private void OnTriggerEnter(Collider coll)
+    {
+        GameObject otherObj = coll.gameObject;
+        if(otherObj.layer == LayerMask.NameToLayer("Cart"))
+        {
+            NavMeshObstacle  navObstacle = otherObj.AddComponent<NavMeshObstacle>();
+            navObstacle.carving = true;
+
+            Rigidbody otherRigid = otherObj.GetComponent<Rigidbody>();
+            otherObj.layer = this.gameObject.layer;
+            otherObj.transform.SetParent(null);
+            otherObj.transform.parent = this.transform;
+            anim.SetLayerWeight(1, 0.75f);
+
+            cartTr.Add(otherObj.transform);
+            carDistanceList.Add(cartOffset);
+
+            Destroy(otherRigid);
+
+            cartOffset += 1.5f;
+        }
+        else if(otherObj.CompareTag("CartParking"))
+        {
+            if (cartTr == null) return;
+            foreach(Transform _cartTr in cartTr)
+            {
+                GameObject cartObj = _cartTr.gameObject;
+                NavMeshObstacle navObstacle = cartObj.GetComponent<NavMeshObstacle>();
+                Rigidbody cartRigid = cartObj.AddComponent<Rigidbody>();
+                Destroy(navObstacle);
+            }
+
+            anim.SetLayerWeight(1, 0);
+            gmr.SetCartGroup(cartTr);
+            cartTr.Clear();
+        }
+
+    }
+
 
 }

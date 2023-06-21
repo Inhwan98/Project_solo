@@ -346,9 +346,9 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
-  m_Constraints: 116
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!136 &1496471483256564269
 CapsuleCollider:
@@ -398,6 +398,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bdb6a1fe60ad4642a7eeb4c8bd83210, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  npcState: 0
+  cartTr: {fileID: 0}
+  boxPrefab: {fileID: 7316455584394356475, guid: 5203fd486ae407b47bb58cbe534dbf28, type: 3}
 --- !u!1 &1496471483331909367
 GameObject:
   m_ObjectHideFlags: 0
