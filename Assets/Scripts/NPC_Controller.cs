@@ -104,6 +104,8 @@ namespace Inan.NPC
                             Debug.Log("자식 분리");
                             anim.SetBool(hashThink, true);
                             isCatchCart = false;
+
+                            
                         }
                         break;
                 }
