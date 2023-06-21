@@ -30,16 +30,19 @@ public class PlayerController : MonoBehaviour
     public static PlayerController instance = null;
 
     // 카트 이동 구현
+    [Header("Move Cart Info")]
     List<Transform> cartTr = new List<Transform>();
     List<float> carDistanceList = new List<float>();
-    float timeSum;
     [SerializeField]  float[] time = new float[28];
-
     [SerializeField] float[] destTime = new float[28];
-    
     private float cartOffset = 3.5f;
+    private float timeSum;
 
+    //코인 드롭
+    [Header("Coin Prefab")]
+    [SerializeField] private GameObject coinPrefab;
     GameManager gmr;
+    UIManager UIgmr;
     
 
     private void Awake()
@@ -58,6 +61,7 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         gmr = GameManager.instance;
+        UIgmr = UIManager.instance;
     }
 
     // Update is called once per frame
@@ -164,6 +168,10 @@ public class PlayerController : MonoBehaviour
             cartTr.Add(otherObj.transform);
             carDistanceList.Add(cartOffset);
 
+            GameObject coinObj = Instantiate(coinPrefab, otherObj.transform.position, Quaternion.identity);
+            CoinCtr coinCtr = coinObj.GetComponent<CoinCtr>();
+            coinCtr.SetCoinRectTr(UIgmr.GetCoinRectTr());
+            
             Destroy(otherRigid);
 
             cartOffset += 1.5f;

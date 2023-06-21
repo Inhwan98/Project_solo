@@ -132,7 +132,7 @@ public class GameManager : MonoBehaviour
     {
         for(int i = 0; i < randTr.Length; i++)
         {
-            for(int j = 0; j < randTr[randTr.Length].childCount; j++)
+            for(int j = 0; j < randTr[randTr.Length-1].childCount; j++)
             {
                 if(randTr[i].GetChild(j) == _tr)
                 {
