@@ -58,21 +58,7 @@ ModelImporter:
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
-      events:
-      - time: 0.36448598
-        functionName: CreateArrow
-        data: 
-        objectReferenceParameter: {fileID: 4679995620075329811, guid: d25bd7d3754dd43bd825e617456c3f16, type: 3}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
-      - time: 1
-        functionName: EndAttack
-        data: 
-        objectReferenceParameter: {fileID: 4679995620075329811, guid: d25bd7d3754dd43bd825e617456c3f16, type: 3}
-        floatParameter: 0
-        intParameter: 0
-        messageOptions: 0
+      events: []
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}
