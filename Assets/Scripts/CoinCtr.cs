@@ -5,21 +5,23 @@ using UnityEngine;
 public class CoinCtr : MonoBehaviour
 {
     UIManager uimgr;
-    [SerializeField] float moveSpeed = 5f; // ÀÌµ¿ ¼Óµµ
-    private RectTransform uiRectTransform; // UI ¿ÀºêÁ§Æ®ÀÇ RectTransform
-    Vector3 screenPos;
+    [SerializeField] float moveSpeed = 5f; // ï¿½Ìµï¿½ ï¿½Óµï¿½
+    private RectTransform uiRectTransform; // UI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ RectTransform
+    Vector2 screenPos;
 
-    private Vector3 targetPosition; // ´ë»óÀÇ ¸ñÇ¥ À§Ä¡
+    private Vector2 targetPosition; // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ ï¿½ï¿½Ä¡
 
     private void Start()
     {
         screenPos = Camera.main.WorldToScreenPoint(transform.position);
+
+       
     }
 
     private void Update()
     {
-        // ´ë»óÀÇ ÇöÀç À§Ä¡¿¡¼­ ¸ñÇ¥ À§Ä¡±îÁö ºÎµå·´°Ô ÀÌµ¿
-        transform.position = Vector3.Lerp(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½Ìµï¿½
+        transform.position = Vector2.Lerp(screenPos, targetPosition, moveSpeed * Time.deltaTime);
     }
 
     public void SetCoinRectTr(RectTransform _coinRectTr)

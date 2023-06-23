@@ -12,6 +12,8 @@ public class CameraController : MonoBehaviour
     Vector3 velocity;
     PlayerController playerCtr;
     Transform playerTr;
+
+    private bool isMove = false;
     void Start()
     {  
        playerCtr = PlayerController.instance; 
@@ -19,8 +21,10 @@ public class CameraController : MonoBehaviour
     }
 
     // Update is called once per frame
+
     void LateUpdate()
     {
+
         Vector3 pos = playerTr.position +
                       (-Vector3.forward * zOffset) +
                       (Vector3.right * xOffset) +
@@ -30,5 +34,10 @@ public class CameraController : MonoBehaviour
                                                 pos,
                                                 ref velocity,
                                                 damping);
+   
+
+        
+
+       
     }
 }

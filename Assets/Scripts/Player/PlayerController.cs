@@ -37,13 +37,16 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float[] destTime = new float[28];
     private float cartOffset = 3.5f;
     private float timeSum;
-
+    [SerializeField] private int maxCartCount = 10;
+    private int curCartCount = 0;
     //코인 드롭
     [Header("Coin Prefab")]
     [SerializeField] private GameObject coinPrefab;
     GameManager gmr;
     UIManager UIgmr;
     
+    
+
 
     private void Awake()
     {
@@ -154,13 +157,16 @@ public class PlayerController : MonoBehaviour
     private void OnTriggerEnter(Collider coll)
     {
         GameObject otherObj = coll.gameObject;
-        if(otherObj.layer == LayerMask.NameToLayer("Cart"))
+        if(otherObj.layer == LayerMask.NameToLayer("PicDownCart") && curCartCount < maxCartCount)
         {
+            curCartCount++;
+            UIgmr.SetCartCountUI(curCartCount, maxCartCount);
+            
             NavMeshObstacle  navObstacle = otherObj.AddComponent<NavMeshObstacle>();
             navObstacle.carving = true;
 
             Rigidbody otherRigid = otherObj.GetComponent<Rigidbody>();
-            otherObj.layer = this.gameObject.layer;
+            otherObj.layer = LayerMask.NameToLayer("PlayerCart");
             otherObj.transform.SetParent(null);
             otherObj.transform.parent = this.transform;
             anim.SetLayerWeight(1, 0.75f);
@@ -168,31 +174,49 @@ public class PlayerController : MonoBehaviour
             cartTr.Add(otherObj.transform);
             carDistanceList.Add(cartOffset);
 
-            GameObject coinObj = Instantiate(coinPrefab, otherObj.transform.position, Quaternion.identity);
-            CoinCtr coinCtr = coinObj.GetComponent<CoinCtr>();
-            coinCtr.SetCoinRectTr(UIgmr.GetCoinRectTr());
+            // GameObject coinObj = Instantiate(coinPrefab, otherObj.transform.position, Quaternion.identity);
+            // CoinCtr coinCtr = coinObj.GetComponent<CoinCtr>();
+            // coinCtr.SetCoinRectTr(UIgmr.GetCoinRectTr());
+
+            UIgmr.AddCoinUi();
             
-            Destroy(otherRigid);
+            
+            //Destroy(otherRigid);
 
             cartOffset += 1.5f;
         }
         else if(otherObj.CompareTag("CartParking"))
         {
+            Debug.Log("Parking");
             if (cartTr == null) return;
+            int countSum = 0;
             foreach(Transform _cartTr in cartTr)
             {
+                curCartCount--;
+                countSum++;
                 GameObject cartObj = _cartTr.gameObject;
-                NavMeshObstacle navObstacle = cartObj.GetComponent<NavMeshObstacle>();
-                Rigidbody cartRigid = cartObj.AddComponent<Rigidbody>();
-                Destroy(navObstacle);
-            }
 
+                NavMeshObstacle  navObstacle = _cartTr.GetComponent<NavMeshObstacle>();
+                
+                Destroy(navObstacle);
+                // Rigidbody cartRigid = cartObj.AddComponent<Rigidbody>();
+                // cartRigid.constraints = RigidbodyConstraints.FreezePositionX;
+                // cartRigid.constraints = RigidbodyConstraints.FreezePositionZ;
+                // cartRigid.useGravity = true;
+                cartObj.layer = LayerMask.NameToLayer("Cart");
+
+            }
+            if(countSum > 0) UIgmr.VisibleReward(countSum);
+            UIgmr.SetCartCountUI(curCartCount, maxCartCount);
+            
             anim.SetLayerWeight(1, 0);
             gmr.SetCartGroup(cartTr);
             cartTr.Clear();
         }
 
     }
+
+    
 
 
 }

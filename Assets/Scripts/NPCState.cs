@@ -7,5 +7,7 @@ namespace Inan.NPC
         PAY,
         EXIT,
         FINAL,
+        HITCART,
+        ANGRY,
     }
 }

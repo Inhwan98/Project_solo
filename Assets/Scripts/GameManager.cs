@@ -18,9 +18,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Transform exitTrGroup;
     [SerializeField] private Transform finalTr;
 
+    [SerializeField] private Transform angryTr;
+
     private bool[] isCartUse; // 사용중인 카트가 있다면 true 없다면 false
     private bool isCart = false; // 사용할 카트가 있는가?
     private int curCartCount; // 현재 모든 카트의 수
+
+    private bool isAngryNpc;
+    private GameObject angryObj;
+    private NPC_Controller angryCtr;
 
     private bool[,] isUsedPos; // 누가 머무르고 있나
     private void Awake()
@@ -79,6 +85,18 @@ public class GameManager : MonoBehaviour
             
             if(cartGroupTr.childCount != 0)
             {
+                if(isAngryNpc)
+                {
+                    isAngryNpc = false;
+                    angryCtr.SetCartDestination(cartGroupTr.GetChild(0));
+                    angryCtr.SetNPCState(NPCState.CATCHCART);
+
+                    angryCtr = null;
+                    angryObj = null;
+                    yield return new WaitForSeconds(5.0f);
+                    continue;
+                }
+                
                 curCartCount = cartGroupTr.childCount;
                 GameObject npcObj = Instantiate(npcPrefab, startTr.position, startTr.rotation);
                 NPC_Controller npcCtr = npcObj.GetComponent<NPC_Controller>();
@@ -91,6 +109,18 @@ public class GameManager : MonoBehaviour
                         isCartUse[i] = true; // 해당 카트 사용중
                         break;
                     }
+                }
+            }
+            else
+            {
+                if(!isAngryNpc)
+                {
+                    angryObj = Instantiate(npcPrefab, startTr.position, startTr.rotation);
+                    angryCtr = angryObj.GetComponent<NPC_Controller>();
+                    angryCtr.SetNPCState(NPCState.ANGRY);
+                    angryCtr.SetDestination(angryTr);
+
+                    isAngryNpc = true;
                 }
                 
             }
@@ -167,6 +197,11 @@ public class GameManager : MonoBehaviour
         {
             cartTr.parent = cartGroupTr;
         }
+    }
+
+    public int GetCartGroupChildCount()
+    {
+        return cartGroupTr.childCount;
     }
 
 

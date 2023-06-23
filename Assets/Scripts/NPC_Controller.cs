@@ -9,6 +9,8 @@ namespace Inan.NPC
     {
         private readonly int hashWalk = Animator.StringToHash("IsWalk");
         private readonly int hashThink = Animator.StringToHash("IsThink");
+        private readonly int hashHit = Animator.StringToHash("IsHit");
+        private readonly int hashShouting = Animator.StringToHash("IsShout");
 
         [Header("NPC State")]
         [SerializeField] NPCState npcState = NPCState.CATCHCART;
@@ -17,6 +19,7 @@ namespace Inan.NPC
 
         private Animator anim;
         private Transform destTr; // agent의 목적지. 처음 목적지는 카트
+        private Transform tempDestTr; // agent의 목적지. 처음 목적지는 카트
         private Transform cartTr;
         private Transform boxTr;
         [SerializeField] private GameObject boxPrefab;
@@ -24,6 +27,7 @@ namespace Inan.NPC
         private float time; //layer 바꿔주는 time
         private bool isCatchCart = false;
         GameManager gmr;
+        PlayerController playerController;
 
         private void Awake()
         {
@@ -32,7 +36,10 @@ namespace Inan.NPC
         }
         void Start()
         {
-            
+            gmr = GameManager.instance;
+            playerController = PlayerController.instance;
+            gameObject.layer = 2;
+
             StartCoroutine(CheckState());
             StartCoroutine(CheckAnimState());
         }
@@ -40,10 +47,10 @@ namespace Inan.NPC
         // Update is called once per frame
         void Update()
         {
-            gmr = GameManager.instance;
+            
             //Cart 잡기
             ActionCatchCart();
-            
+
         }
 
         void ActionCatchCart()
@@ -71,12 +78,11 @@ namespace Inan.NPC
         {
             while (true)
             {
-                yield return new WaitForSeconds(0.3f);
                 switch (npcState)
                 {
                     //카트에 근접하면 카트 잡는 레이어 활성화
                     case NPCState.CATCHCART:
-                        if(Vector3.Distance(transform.position, destTr.position) <= 4.1f)
+                        if (Vector3.Distance(transform.position, destTr.position) <= 4.1f)
                         {
                             Debug.Log("Catch");
                             transform.LookAt(destTr.position + (Vector3.right));
@@ -86,8 +92,8 @@ namespace Inan.NPC
                             yield return new WaitForSeconds(0.3f);
                             destTr.parent = transform;
                             cartTr = destTr;
-                            cartTr.gameObject.layer = 2; //Change Layer to Ignore
                             
+
                             //Rigidbody cartRigid = cartTr.gameObject.GetComponent<Rigidbody>();
                             //cartRigid.isKinematic = true; // 마법사 NPC에 유용할듯
 
@@ -101,13 +107,13 @@ namespace Inan.NPC
                         break;
 
                     case NPCState.MARTIN:
-                        if(agent.remainingDistance <= 0.1f)
+                        if (agent.remainingDistance <= 0.1f)
                         {
                             agent.isStopped = true;
                             yield return new WaitForSeconds(0.3f);
                             gmr.SetRandTr(destTr);
                             destTr = gmr.GetPayTr();
-                            
+
                             agent.isStopped = false;
                             agent.SetDestination(destTr.position);
                             npcState = NPCState.PAY;
@@ -126,6 +132,7 @@ namespace Inan.NPC
                             boxTr = boxObj.transform;
                             destTr = gmr.GetExitTr();
                             agent.SetDestination(destTr.position);
+                            gameObject.layer = LayerMask.NameToLayer("NPC");
                             npcState = NPCState.EXIT;
                         }
                         break;
@@ -136,12 +143,10 @@ namespace Inan.NPC
                             boxTr.SetParent(this.transform);
                             boxTr.localPosition = (transform.forward * 1.0f) + (transform.up * 4f);
                             cartTr.SetParent(null);
-                            cartTr.gameObject.layer = LayerMask.NameToLayer("Cart");
+                            cartTr.gameObject.layer = LayerMask.NameToLayer("PicDownCart");
 
                             //Rigidbody cartRigid = cartTr.gameObject.GetComponent<Rigidbody>();
                             //cartRigid.isKinematic = false;
-
-
                             destTr = gmr.GetFinalTr();
                             agent.SetDestination(destTr.position);
 
@@ -156,17 +161,51 @@ namespace Inan.NPC
                         }
                         break;
 
+                    case NPCState.HITCART:
+                        anim.enabled = true;
+                        isCatchCart = false;
+                        anim.SetBool(hashHit, true);
+                        
+                        yield return new WaitForSeconds(1.5f);
+                        
+                        anim.SetBool(hashHit, false);
+                        anim.SetBool(hashShouting, true);
+                                                
+                        yield return new WaitForSeconds(2.0f);
+                        agent.SetDestination(destTr.position);
+                        anim.SetBool(hashShouting, false);
+                        agent.isStopped = false;
+                        
+                        destTr = tempDestTr;
+                        if (cartTr != null && boxTr != null)
+                        {
+                            boxTr.SetParent(null);
+                            Destroy(boxTr.gameObject);
+                            //cartTr.SetParent(transform);
+                        }
+                        npcState = NPCState.FINAL;
+                        break;
+
+                    case NPCState.ANGRY:
+                        if (agent.remainingDistance <= 0.2f)
+                        {
+                            anim.SetBool(hashShouting, true);
 
                         }
+                        break;
+
+
+                }
+                yield return new WaitForSeconds(0.3f);
             }
         }
 
         IEnumerator CheckAnimState()
         {
-            while(true)
+            while (true)
             {
                 yield return new WaitForSeconds(0.3f);
-                if(agent.velocity.magnitude > 0.1f)
+                if (agent.velocity.magnitude > 0.1f)
                 {
                     anim.SetBool("IsWalk", true);
                 }
@@ -175,6 +214,11 @@ namespace Inan.NPC
                     anim.SetBool(hashWalk, false);
                 }
             }
+        }
+
+        public void SetNPCState(NPCState _npcState)
+        {
+            npcState = _npcState;
         }
 
         public void SetCartDestination(Transform _destTr)
@@ -188,6 +232,42 @@ namespace Inan.NPC
             agent.SetDestination(_destTr.position);
             destTr = _destTr;
         }
-    }
+
+        private void OnTriggerEnter(Collider coll)
+        {
+            {
+                if (coll.gameObject.layer == LayerMask.NameToLayer("PlayerCart"))
+                {
+                    if (npcState == NPCState.EXIT || npcState == NPCState.FINAL)
+                    {
+                        this.gameObject.layer = LayerMask.NameToLayer("Player");
+
+                        isCatchCart = false;
+                        agent.isStopped = true;
+
+                        //Box 설정
+                        var boxRigid = boxTr.GetComponent<Rigidbody>();
+                        boxRigid.isKinematic = false;
+                        boxRigid.AddExplosionForce(300.0f, coll.transform.position, 10.0f, 300.0f);
+
+                        var boxColl = boxTr.GetComponent<Collider>();
+                        boxColl.isTrigger = false;
+
+                        if (cartTr != null && boxTr != null)
+                        {
+                            cartTr.SetParent(null);
+                            boxTr.SetParent(null);
+                            cartTr.gameObject.layer = LayerMask.NameToLayer("PicDownCart");
+                        }
+
+                        npcState = NPCState.HITCART;
+                    }
+
+                }
+            }
+        }
 
     }
+}
+
+

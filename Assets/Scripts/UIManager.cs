@@ -6,9 +6,15 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager instance = null;
+    [Header("Reward Text Event")]
+    [SerializeField] private GameObject[] rewardTextObj;
+    [SerializeField] private GameObject rewardPrefab;
 
-    [SerializeField] private GameObject panelObj;
+    [Header("Cart Count")]
+    [SerializeField] private Text cartCountText;
+    
     [Header("Coin UI")]
+    [SerializeField] private GameObject panelObj;
     [SerializeField] private GameObject coinPrefab;
     private RectTransform coinRectTr;
     private bool isCreateCoinUI = false;
@@ -54,8 +60,42 @@ public class UIManager : MonoBehaviour
             coinCount += 100;
             coinText.text = $"{coinCount}";
         }
-
     }
+
+    public void VisibleReward(int count)
+    {
+        if(count < 10)
+        {
+            StartCoroutine(VisibleTimer(0));
+        }
+        else
+        {
+            StartCoroutine(VisibleTimer(1));
+        }
+    }
+
+    public void SetCartCountUI(int cnt, int maxCnt)
+    {
+        if(cnt >= maxCnt)
+        {
+            cartCountText.text = $"Max!!";
+        }
+        else
+        {
+            cartCountText.text = $"{cnt}";
+        }
+        
+    }
+
+    IEnumerator VisibleTimer(int idx)
+    {
+        GameObject rewardObj = Instantiate(rewardPrefab, rewardTextObj[idx].transform.position, Quaternion.identity);
+        rewardTextObj[idx].SetActive(true);
+        yield return new WaitForSeconds(2.0f);
+        rewardTextObj[idx].SetActive(false);
+        Destroy(rewardObj);
+    }
+
 
     public RectTransform GetCoinRectTr()
     {
