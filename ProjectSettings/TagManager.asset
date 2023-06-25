@@ -7,6 +7,7 @@ TagManager:
   - FxTemporaire
   - CHARACTER
   - CartParking
+  - Contact
   layers:
   - Default
   - TransparentFX
@@ -23,7 +24,7 @@ TagManager:
   - PlayerCart
   - PicDownCart
   - NPC
-  - 
+  - Wall
   - 
   - 
   - 

@@ -213,6 +213,10 @@ public class PlayerController : MonoBehaviour
             gmr.SetCartGroup(cartTr);
             cartTr.Clear();
         }
+        else if(otherObj.CompareTag("Contact"))
+        {
+            UIgmr.SetIsContact(true);
+        }
 
     }
 

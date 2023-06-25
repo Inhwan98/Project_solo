@@ -20,8 +20,6 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Transform angryTr;
 
-    private bool[] isCartUse; // 사용중인 카트가 있다면 true 없다면 false
-    private bool isCart = false; // 사용할 카트가 있는가?
     private int curCartCount; // 현재 모든 카트의 수
 
     private bool isAngryNpc;
@@ -42,10 +40,8 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         curCartCount = cartGroupTr.childCount;
-        isCartUse = new bool[curCartCount];
         isUsedPos = new bool[randTr.Length, 14];
 
-        StartCoroutine(CheckNPCStart()); // Cart Count Check
         StartCoroutine(CheckCartUse());
     }
 
@@ -55,65 +51,51 @@ public class GameManager : MonoBehaviour
         
     }
 
-    IEnumerator CheckNPCStart()
-    {
-        while(true)
-        {
-            yield return new WaitForSeconds(0.3f);
-            foreach(bool check in isCartUse)
-            {
-                //check가 true면 사용중이다.
-                // 하나라도 false면 사용 가능한것
-                if(check == false)
-                {
-                    isCart = true;
-                    break;
-                }
-                else
-                {
-                    isCart = false;
-                }
-            }
-
-        }
-    }
-
     IEnumerator CheckCartUse()
     {
         while(true)
         {
-            
-            if(cartGroupTr.childCount != 0)
+            yield return new WaitForSeconds(5.0f);
+            if (cartGroupTr.childCount > 0)
             {
-                if(isAngryNpc)
+                if (isAngryNpc)
                 {
                     isAngryNpc = false;
-                    angryCtr.SetCartDestination(cartGroupTr.GetChild(0));
-                    angryCtr.SetNPCState(NPCState.CATCHCART);
+                    for(int i = 0; i < curCartCount; i++)
+                    {
+                        Transform cartTr = cartGroupTr.GetChild(0);
+                        if (cartTr != null)
+                        {
+                            cartTr.SetParent(null);
+                            angryCtr.SetCartDestination(cartTr);
 
+                            break;
+                        }
+                    }
                     angryCtr = null;
                     angryObj = null;
-                    yield return new WaitForSeconds(5.0f);
                     continue;
                 }
-                
-                curCartCount = cartGroupTr.childCount;
+
                 GameObject npcObj = Instantiate(npcPrefab, startTr.position, startTr.rotation);
                 NPC_Controller npcCtr = npcObj.GetComponent<NPC_Controller>();
+
                 for(int i = 0; i < curCartCount; i++)
                 {
-                    Transform cartTr = cartGroupTr.GetChild(i);
-                    if(cartTr != null)
+                    Transform cartTr = cartGroupTr.GetChild(0);
+
+
+                    if (cartTr != null)
                     {
+                        cartTr.SetParent(null);
                         npcCtr.SetCartDestination(cartTr);
-                        isCartUse[i] = true; // 해당 카트 사용중
                         break;
                     }
                 }
             }
             else
             {
-                if(!isAngryNpc)
+                if (!isAngryNpc)
                 {
                     angryObj = Instantiate(npcPrefab, startTr.position, startTr.rotation);
                     angryCtr = angryObj.GetComponent<NPC_Controller>();
@@ -122,10 +104,11 @@ public class GameManager : MonoBehaviour
 
                     isAngryNpc = true;
                 }
-                
+
             }
-            yield return new WaitForSeconds(5.0f);
+
         }
+        
     }
 
     public Transform GetStartMartTr()
@@ -193,9 +176,9 @@ public class GameManager : MonoBehaviour
 
     public void SetCartGroup(List<Transform> _cartTrs)
     {
-        foreach(Transform cartTr in _cartTrs)
+        for(int i = 0; i< _cartTrs.Count; i++)
         {
-            cartTr.parent = cartGroupTr;
+            _cartTrs[i].parent = cartGroupTr;
         }
     }
 

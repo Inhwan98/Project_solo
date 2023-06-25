@@ -13,7 +13,7 @@ namespace Inan.NPC
         private readonly int hashShouting = Animator.StringToHash("IsShout");
 
         [Header("NPC State")]
-        [SerializeField] NPCState npcState = NPCState.CATCHCART;
+        [SerializeField] NPCState npcState = NPCState.IDLE;
         private NavMeshAgent agent;
 
 
@@ -38,7 +38,8 @@ namespace Inan.NPC
         {
             gmr = GameManager.instance;
             playerController = PlayerController.instance;
-            gameObject.layer = 2;
+
+            //agent.isStopped = true;
 
             StartCoroutine(CheckState());
             StartCoroutine(CheckAnimState());
@@ -80,10 +81,15 @@ namespace Inan.NPC
             {
                 switch (npcState)
                 {
+                    case NPCState.IDLE:
+                        Debug.Log("NPC : IDLE");
+                        break;
                     //카트에 근접하면 카트 잡는 레이어 활성화
                     case NPCState.CATCHCART:
-                        if (Vector3.Distance(transform.position, destTr.position) <= 4.1f)
+                       
+                        if (Vector3.Distance(transform.position, destTr.position + (-destTr.right * 4.0f)) <= 1f)
                         {
+                            
                             Debug.Log("Catch");
                             transform.LookAt(destTr.position + (Vector3.right));
 
@@ -95,7 +101,7 @@ namespace Inan.NPC
                             
 
                             //Rigidbody cartRigid = cartTr.gameObject.GetComponent<Rigidbody>();
-                            //cartRigid.isKinematic = true; // 마법사 NPC에 유용할듯
+                            //cartRigid.isKinematic = true; // 마법사 NPC
 
                             //catch후 첫 입장
                             destTr = gmr.GetRandTr();
@@ -187,8 +193,9 @@ namespace Inan.NPC
                         break;
 
                     case NPCState.ANGRY:
-                        if (agent.remainingDistance <= 0.2f)
+                        if (Vector3.Distance(transform.position, destTr.position) <= 1f)
                         {
+                            Debug.Log("Angry");
                             anim.SetBool(hashShouting, true);
 
                         }
@@ -223,14 +230,17 @@ namespace Inan.NPC
 
         public void SetCartDestination(Transform _destTr)
         {
-            agent.SetDestination(_destTr.position + (-_destTr.right * 4.0f));
             destTr = _destTr;
+            agent.isStopped = false;
+            agent.SetDestination(_destTr.position + (-_destTr.right * 4.0f));
+            npcState = NPCState.CATCHCART;
         }
 
         public void SetDestination(Transform _destTr)
         {
-            agent.SetDestination(_destTr.position);
             destTr = _destTr;
+            agent.isStopped = false;
+            agent.SetDestination(_destTr.position);
         }
 
         private void OnTriggerEnter(Collider coll)

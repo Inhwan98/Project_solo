@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class AutoDoor : MonoBehaviour
 {
+
+    [Header("Door Sensor")]
+    [SerializeField] float detectionAngle = 45f;
+    [SerializeField] float detectionRange = 5f;
+    [SerializeField] LayerMask CharacterLayer;
+    [SerializeField] Color color;
+
+
     [SerializeField] GameObject leftDoor;
     [SerializeField] GameObject rightDoor;
 
@@ -13,9 +21,8 @@ public class AutoDoor : MonoBehaviour
     Vector3 tartget_left;
     Vector3 tartget_right;
 
-    [SerializeField] float moveSpeed;
+    [SerializeField] private bool isOpen;
 
-    private bool isOpen;
     void Start()
     {
         StartPos_left = leftDoor.transform.position;
@@ -31,49 +38,26 @@ public class AutoDoor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(isOpen)
+        Collider[] colliders = Physics.OverlapSphere(transform.position, detectionRange, CharacterLayer);
+
+        if(colliders.Length > 0)
         {
-            if(Vector3.Distance(leftDoor.transform.position, tartget_left) <= 0.1f)
-            {
-                leftDoor.transform.position = tartget_left;
-                rightDoor.transform.position = tartget_right;
-            }
-            else
-            {
-                leftDoor.transform.position = Vector3.Lerp(StartPos_left, tartget_left, Time.deltaTime * moveSpeed);
-                rightDoor.transform.position = Vector3.Lerp(StartPos_right, tartget_right, Time.deltaTime * moveSpeed);
-            }
+            isOpen = true;
+            leftDoor.transform.position = Vector3.Lerp(StartPos_left, tartget_left, 1);
+            rightDoor.transform.position = Vector3.Lerp(StartPos_right, tartget_right, 1);
         }
         else
         {
-            if (Vector3.Distance(leftDoor.transform.position, StartPos_left) <= 0.1f)
-            {
-                leftDoor.transform.position = StartPos_left;
-                rightDoor.transform.position = StartPos_right;
-            }
-            else
-            {
-                leftDoor.transform.position = Vector3.Lerp(tartget_left, StartPos_left, Time.deltaTime * moveSpeed);
-                rightDoor.transform.position = Vector3.Lerp(tartget_right, StartPos_right, Time.deltaTime * moveSpeed);
-            }
-
-        }
-    }
-
-    private void OnTriggerEnter(Collider coll)
-    {
-        if(coll.gameObject.CompareTag("CHARACTER"))
-        {
-            Debug.Log("문 열림");
-            isOpen = true;
-        }
-    }
-
-    private void OnTriggerExit(Collider coll)
-    {
-        if(coll.gameObject.CompareTag("CHARACTER"))
-        {
             isOpen = false;
+            leftDoor.transform.position = Vector3.Lerp(tartget_left, StartPos_left, 1);
+            rightDoor.transform.position = Vector3.Lerp(tartget_right, StartPos_right, 1);
         }
+    }
+
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
     }
 }

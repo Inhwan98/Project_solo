@@ -6,6 +6,11 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager instance = null;
+    [Header("Start UI")]
+    [SerializeField] private GameObject startTextObj;
+    [SerializeField] private GameObject contactTextObj;
+    private bool isContactPos = false;
+
     [Header("Reward Text Event")]
     [SerializeField] private GameObject[] rewardTextObj;
     [SerializeField] private GameObject rewardPrefab;
@@ -34,13 +39,46 @@ public class UIManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        StartCoroutine(StartTextUI());
+        StartCoroutine(StartContactTextUI());
     }
 
     // Update is called once per frame
     void Update()
     {
         
+    }
+
+    IEnumerator StartTextUI()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(0.3f);
+            
+
+            if(Input.GetMouseButton(0))
+            {
+                startTextObj.SetActive(false);
+                Destroy(startTextObj);
+                yield break;
+            }
+        }
+    }
+
+    IEnumerator StartContactTextUI()
+    {
+        while(true)
+        {
+            yield return new WaitForSeconds(0.3f);
+
+            if(isContactPos)
+            {
+                contactTextObj.SetActive(true);
+                yield return new WaitForSeconds(3.5f);
+                Destroy(contactTextObj);
+                yield break;
+            }
+        }
     }
 
     public void AddCoinUi()
@@ -101,4 +139,11 @@ public class UIManager : MonoBehaviour
     {
         return coinRectTr;
     }
+
+    public void SetIsContact(bool _contact)
+    {
+        isContactPos = _contact;
+    }
+
+
 }

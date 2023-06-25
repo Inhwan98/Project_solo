@@ -40,7 +40,7 @@ public class PlayerSensor : MonoBehaviour
     //         if (angleToNPC <= detectionAngle * 0.5f)
     //         {
     //             // NPC 감지됨
-    //             // 추가 동작을 수행하거나 필요한 처리를 진행합니다.
+    //        
     //         }
     //     }
 
